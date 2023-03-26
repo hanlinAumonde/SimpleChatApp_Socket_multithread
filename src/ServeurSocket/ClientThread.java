@@ -26,8 +26,10 @@ public class ClientThread extends Thread{
     public void diffusion(String Message){
         for(ConcurrentHashMap.Entry<String,ClientThread> entry : ListeClients.entrySet()){
             try{
-                entry.getValue().outputs.writeUTF(Message);
-                entry.getValue().outputs.flush();
+                if(entry.getValue().pseudo.compareTo(pseudo)!=0) {
+                    entry.getValue().outputs.writeUTF(Message);
+                    entry.getValue().outputs.flush();
+                }
             }catch(SocketException socketException){
                 entry.getValue().SocketExceptionHandler();
             }catch(IOException ioException){
@@ -48,11 +50,15 @@ public class ClientThread extends Thread{
         String Msg_Receive,Msg_Send;
         boolean isConnect = true;
         try{
+            outputs.writeUTF("\nVous avez rejoint la conversation");
+            outputs.flush();
             diffusion("\n " + pseudo + " a rejoint la conversation");
             while(isConnect){
                 Msg_Receive = inputs.readUTF();
                 if(!Msg_Receive.startsWith("\nexit")){
                     Msg_Send = "\n" + pseudo + " a dit : " + Msg_Receive;
+                    outputs.writeUTF(Msg_Send);
+                    outputs.flush();
                     diffusion(Msg_Send);
                 }else{
                     Msg_Send = "\nexit valide.";
