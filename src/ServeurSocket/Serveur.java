@@ -30,12 +30,11 @@ public class Serveur {
                     clientPseudo = inputs_connexion.readUTF();
                 }
                 outputs_connexion.writeUTF("\nIdentification valide!");
-                //outputs_connexion.writeUTF("\n " + clientPseudo + " a rejoint la conversation");
                 System.out.println("Le client ' " + clientPseudo + " ' est bien identifié");
                 outputs_connexion.flush();
 
                 //créer un thread pour traiter le conversation avec ce client
-                client = new ClientThread(clientConnexe,clientPseudo);
+                client = new ClientThread(clientConnexe,clientPseudo,inputs_connexion,outputs_connexion);
                 ClientThread.ListeClients.put(clientPseudo,client);  //Ajouter le client dans la liste
                 client.start();
             }
