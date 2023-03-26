@@ -16,19 +16,18 @@ public class ClientThread extends Thread{
     private final DataInputStream inputs;
     private final DataOutputStream outputs;
 
-    public ClientThread(Socket client,String pseudo) throws IOException {
+    public ClientThread(Socket client,String pseudo,DataInputStream inputs,DataOutputStream outputs) throws IOException {
         this.client = client;
         this.pseudo = pseudo;
-        this.inputs = new DataInputStream(client.getInputStream());
-        this.outputs = new DataOutputStream(client.getOutputStream());
+        this.inputs = inputs;
+        this.outputs = outputs;
     }
 
     public void diffusion(String Message){
         for(ConcurrentHashMap.Entry<String,ClientThread> entry : ListeClients.entrySet()){
             try{
-                if(pseudo.compareTo(entry.getKey()) != 0){
-                    entry.getValue().outputs.writeUTF(Message);
-                }
+                entry.getValue().outputs.writeUTF(Message);
+                entry.getValue().outputs.flush();
             }catch(SocketException socketException){
                 entry.getValue().SocketExceptionHandler();
             }catch(IOException ioException){
@@ -47,12 +46,10 @@ public class ClientThread extends Thread{
     @Override
     public void run(){
         String Msg_Receive,Msg_Send;
-        boolean disconnection = false;
+        boolean isConnect = true;
         try{
-            outputs.writeUTF("\nVous avez rejoint la conversation");
             diffusion("\n " + pseudo + " a rejoint la conversation");
-
-            while(!disconnection){
+            while(isConnect){
                 Msg_Receive = inputs.readUTF();
                 if(!Msg_Receive.startsWith("\nexit")){
                     Msg_Send = "\n" + pseudo + " a dit : " + Msg_Receive;
@@ -60,10 +57,15 @@ public class ClientThread extends Thread{
                 }else{
                     Msg_Send = "\nexit valide.";
                     outputs.writeUTF(Msg_Send);
-                    disconnection = true;
+                    outputs.flush();
+                    try{
+                        Thread.sleep(200);
+                        isConnect = false;
+                    }catch(InterruptedException interruptedException){
+                        interruptedException.getStackTrace();
+                    }
                 }
             }
-
             ClientDisconnection();
 
         }catch(SocketException socketException){
@@ -71,20 +73,11 @@ public class ClientThread extends Thread{
         }catch(IOException ioException){
             ioException.getStackTrace();
         }
-        /*
-        finally {
-            try {
-                ClientDisconnection();
-            }catch(IOException ioException){
-                ioException.getStackTrace();
-            }
-        }
-        */
     }
 
     private void ClientDisconnection() throws IOException{
         ListeClients.remove(pseudo);
-        System.out.println("\nLe connexion du client " + pseudo + " déconnecte.");
+        System.out.println("\nLe client " + pseudo + " déconnecte.");
         diffusion("\nclient " + pseudo + " a quitté la conversation");
         inputs.close();
         outputs.close();
