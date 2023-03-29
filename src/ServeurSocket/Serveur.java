@@ -9,6 +9,7 @@ import java.net.Socket;
 public class Serveur {
     public static void main(String[] args){
         try{
+            //Créer le ServeurSocket
             ServerSocket Serveur = new ServerSocket(10080);
             ClientThread client;
             DataOutputStream outputs_connexion;
@@ -25,6 +26,7 @@ public class Serveur {
                 //Identification
                 clientPseudo = inputs_connexion.readUTF();
                 while(ClientThread.ListeClients.containsKey(clientPseudo)){
+                    //Répétez la boucle jusqu'à ce que le pseudo d'entrée n'ait pas de doublons dans la liste des utilisateurs
                     outputs_connexion.writeUTF("\nIdentification invalide!");
                     outputs_connexion.flush();
                     clientPseudo = inputs_connexion.readUTF();
