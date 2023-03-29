@@ -45,8 +45,11 @@ public class ClientMsgSender extends Thread {
             outputs.writeUTF("\nexit confirmed");
             outputs.flush();
 
-            Cette partie est utilisée pour simuler les trois poignées de main lorsque la connexion TCP est fermée, pour s'assurer que le flux de données client est fermé plus tôt que la fin du serveur, et l'utilisation de countDownlatch était à l'origine utilisée pour assurer la progression normale de la poignée de main à trois voies .
-Cependant, des problèmes ont été rencontrés lors du test. La dernière prise de contact lève toujours une IOException côté serveur, ce qui provoque une déconnexion anormale du serveur. Par conséquent, une solution alternative est utilisée, qui consiste à laisser le serveur dormir pendant un certain temps pour assurez-vous que le flux de données client est fermé.
+            Cette partie est utilisée pour simuler les trois poignées de main lorsque la connexion TCP est fermée, pour s'assurer que le flux de données client est fermé plus tôt que la fin du serveur, 
+            et l'utilisation de countDownlatch était à l'origine utilisée pour assurer la progression normale de la poignée de main à trois voies .
+Cependant, des problèmes ont été rencontrés lors du test. La dernière prise de contact lève toujours une IOException côté serveur, 
+ce qui provoque une déconnexion anormale du serveur. Par conséquent, une solution alternative est utilisée, 
+qui consiste à laisser le serveur dormir pendant un certain temps pour assurez-vous que le flux de données client est fermé.
 
              */
         } catch (SocketException socketException) {
