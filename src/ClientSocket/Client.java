@@ -5,8 +5,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
-import java.util.concurrent.CountDownLatch; //Utilisé pour permettre aux threads de lecture et d'écriture du client de communiquer entre eux
+import java.util.concurrent.CountDownLatch; 
 
+/**
+ * La classe Client permet de créer et de gérer un client de chat.
+ */
 public class Client {
     public static void main(String[] args){
         try{
@@ -23,6 +26,8 @@ public class Client {
             outputs_connexion.writeUTF(pseudo);
             outputs_connexion.flush();
             String response = inputs_connexion.readUTF();
+
+            // Boucle pour vérifier la validité de l'identifiant
             do{
                 if(response.startsWith("\nIdentification valide!")){
                     break;
@@ -35,13 +40,12 @@ public class Client {
 
             }while(true);
 
-            //executer les chats
-
+            // Exécuter les chats
             CountDownLatch latch = new CountDownLatch(1); //Initialisez CountDownLatch et utilisez-le comme l'un des paramètres pour construire deux threads
             ClientMsgReceptor ReadMsg = new ClientMsgReceptor(inputs_connexion,latch);
             ClientMsgSender SendMsg = new ClientMsgSender(outputs_connexion,latch);
             
-            //exécuter les threads
+            // Exécuter les threads
             ReadMsg.start();
             SendMsg.start();
             
