@@ -6,10 +6,13 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Classe Serveur permettant de créer un serveur de chat.
+ */
 public class Serveur {
     public static void main(String[] args){
         try{
-            //Créer le ServeurSocket
+            // Création d'un serveur socket sur le port 10080
             ServerSocket Serveur = new ServerSocket(10080);
             ClientThread client;
             DataOutputStream outputs_connexion;
@@ -17,16 +20,16 @@ public class Serveur {
             String clientPseudo;
 
             while(true){
-                //Attendre un client
+                // Attendre qu'un client se connecte
                 Socket clientConnexe = Serveur.accept();
                 System.out.println("\nUn nouveau client a connecté ");
                 outputs_connexion = new DataOutputStream(clientConnexe.getOutputStream());
                 inputs_connexion = new DataInputStream(clientConnexe.getInputStream());
 
-                //Identification
+                // Identification du client
                 clientPseudo = inputs_connexion.readUTF();
+                // Vérification de l'unicité du pseudo
                 while(ClientThread.ListeClients.containsKey(clientPseudo)){
-                    //Répétez la boucle jusqu'à ce que le pseudo d'entrée n'ait pas de doublons dans la liste des utilisateurs
                     outputs_connexion.writeUTF("\nIdentification invalide!");
                     outputs_connexion.flush();
                     clientPseudo = inputs_connexion.readUTF();
@@ -35,7 +38,7 @@ public class Serveur {
                 System.out.println("Le client ' " + clientPseudo + " ' est bien identifié");
                 outputs_connexion.flush();
 
-                //créer un thread pour traiter le conversation avec ce client
+                // Création d'un thread pour gérer la conversation avec ce client
                 client = new ClientThread(clientConnexe,clientPseudo,inputs_connexion,outputs_connexion);
                 ClientThread.ListeClients.put(clientPseudo,client);  //Ajouter le client dans la liste
                 client.start();
