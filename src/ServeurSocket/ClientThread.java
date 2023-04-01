@@ -7,16 +7,28 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap; //HashMap sécurisé dans un environnement de mutil-thread
 
-//Thread pour gérer les conversations avec chaque client
+/**
+ * Classe ClientThread, étend Thread pour gérer les clients connectés au serveur de chat.
+ */
 public class ClientThread extends Thread{
-    private final String pseudo; //Identification d'un client
+    private final String pseudo; 
     private final Socket client;
-    public static ConcurrentHashMap<String, ClientThread> ListeClients = new ConcurrentHashMap<>(); //Map static pour tous les clients
 
-    //Les flux de données d'un client
+    // Map static pour stocker tous les clients
+    public static ConcurrentHashMap<String, ClientThread> ListeClients = new ConcurrentHashMap<>(); 
+
     private final DataInputStream inputs;
     private final DataOutputStream outputs;
 
+    /**
+     * Constructeur pour la classe ClientThread.
+     *
+     * @param client Le socket client
+     * @param pseudo Le pseudo du client
+     * @param inputs Le flux d'entrée pour lire les messages du client
+     * @param outputs Le flux de sortie pour envoyer des messages au client
+     * @throws IOException En cas d'erreur d'entrée/sortie
+     */
     public ClientThread(Socket client,String pseudo,DataInputStream inputs,DataOutputStream outputs) throws IOException {
         this.client = client;
         this.pseudo = pseudo;
@@ -24,14 +36,34 @@ public class ClientThread extends Thread{
         this.outputs = outputs;
     }
 
-    //diffusion() permet de diffuser le message à tous les clients connectés au serveur (sauf le client correspondant au thread appelant cette fonction)
+    // Les getters pour les attributs de la classe
+    public Socket getClient(){
+        return this.client;
+    }
+
+    public String getPseudo(){
+        return this.pseudo;
+    }
+
+    public DataInputStream getInputs(){
+        return this.inputs;
+    }
+
+    public DataOutputStream getOutouts(){
+        return this.outputs;
+    }
+
+    /**
+     * Fonction pour diffuser un message à tous les clients connectés, sauf l'expéditeur.
+     *
+     * @param Message Le message à diffuser
+     */
     public void diffusion(String Message){
         for(ConcurrentHashMap.Entry<String,ClientThread> entry : ListeClients.entrySet()){
             try{
-                if(entry.getValue().pseudo.compareTo(pseudo)!=0) { 
-                    //Ne pas diffuser à ce client pour éviter que le programme ne plante en raison d'une déconnexion anormale de ce  client 
-                    entry.getValue().outputs.writeUTF(Message);
-                    entry.getValue().outputs.flush();
+                if(entry.getValue().getPseudo().compareTo(this.getPseudo())!=0) {  
+                    entry.getValue().getOutouts().writeUTF(Message);
+                    entry.getValue().getOutputs().flush();
                 }
             }catch(SocketException socketException){
                 entry.getValue().SocketExceptionHandler();
@@ -41,34 +73,39 @@ public class ClientThread extends Thread{
         }
     }
     
-    //SocketExceptionHandler() est utilisé pour gérer les déconnexions anormales du client
+    /**
+     * Fonction pour traiter les exceptions de socket.
+     */
     public void SocketExceptionHandler(){
         String MsgException = "\nclient " + this.pseudo + " a quitté la conversation";
-        this.diffusion(MsgException); //Annoncer aux autres clients que cet client est hors ligne
-        ListeClients.remove(pseudo);  //Supprimer le client de la liste des clients
+        this.diffusion(MsgException); 
+        ListeClients.remove(pseudo);  
         System.out.println("\nLe connexion du client " + pseudo + " est perdu.");
     }
 
+    /**
+     * La méthode run, exécutée lorsqu'un nouveau thread est lancé.
+     */
     @Override
     public void run(){
         String Msg_Receive,Msg_Send;
         boolean isConnect = true;
         try{
-            outputs.writeUTF("\nVous avez rejoint la conversation"); //envoyer un message à cet client
+            outputs.writeUTF("\nVous avez rejoint la conversation"); 
             outputs.flush();
-            diffusion("\n " + pseudo + " a rejoint la conversation"); //envoyer des messages à d'autres clients
-            while(isConnect){ //Cette boucle continue jusqu'à ce qu'elle reçoive un message 'exit' du client.
+            diffusion("\n " + pseudo + " a rejoint la conversation"); 
+            while(isConnect){
                 Msg_Receive = inputs.readUTF();
-                if(!Msg_Receive.startsWith("\nexit")){ //Message normal
+                if(!Msg_Receive.startsWith("\nexit")){ 
                     Msg_Send = "\n" + pseudo + " a dit : " + Msg_Receive;
                     outputs.writeUTF(Msg_Send);
                     outputs.flush();
                     diffusion(Msg_Send);
-                }else{  //Message 'exit'
+                }else{  
                     Msg_Send = "\nexit valide.";
                     outputs.writeUTF(Msg_Send);
                     outputs.flush();
-                    try{ //Veille pendant un certain temps pour s'assurer que le socket client est fermé avant le thread client du serveur
+                    try{ 
                         Thread.sleep(200);
                         isConnect = false;
                     }catch(InterruptedException interruptedException){
@@ -85,7 +122,11 @@ public class ClientThread extends Thread{
         }
     }
     
-    //Procédure d'arrêt du thread client
+    /**
+     * Fonction pour gérer la déconnexion d'un client.
+     *
+     * @throws IOException En cas d'erreur d'entrée/sortie
+     */
     private void ClientDisconnection() throws IOException{
         ListeClients.remove(pseudo);
         System.out.println("\nLe client " + pseudo + " déconnecte.");
@@ -94,5 +135,4 @@ public class ClientThread extends Thread{
         outputs.close();
         client.close();
     }
-
 }
