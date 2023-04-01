@@ -6,34 +6,55 @@ import java.net.SocketException;
 import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
-//Thread écriture
-
+/**
+ * La classe ClientMsgSender est un thread pour l'écriture des messages du client.
+ */
 public class ClientMsgSender extends Thread {
+
     private boolean isConnect;
-
     private final CountDownLatch latch;
-
     private final DataOutputStream outputs;
 
+    /**
+     * Constructeur de la classe ClientMsgSender.
+     * 
+     * @param outputs Le flux de sortie de données pour écrire les messages.
+     * @param latch   Le CountDownLatch pour synchroniser les threads de lecture et d'écriture.
+     * @throws IOException en cas d'erreur d'E/S.
+     */
     public ClientMsgSender(DataOutputStream outputs,CountDownLatch latch) throws IOException {
         this.latch = latch;
         this.isConnect = true;
         this.outputs = outputs;
     }
+    
+    //getters
+    public boolean getIsConnect() {
+        return this.isConnect;
+    }
+
+    public DataInputStream getOutputs() {
+        return this.outputs;
+    }
+    
+    //setter
+    public void setIsConnect(boolean status) {
+        this.isConnect = status;
+    }
 
     @Override
     public void run() {
         String Msg_Send;
-        Scanner sc = new Scanner(System.in); //lecture bloquante
+        Scanner sc = new Scanner(System.in); // Lecture bloquante
 
         try {
-            while (isConnect) {
+            while (getIsConnect()) {
                 Msg_Send = sc.nextLine();
                 outputs.writeUTF("\n" + Msg_Send);
                 outputs.flush();
 
                 if (Msg_Send.startsWith("exit")) {
-                    isConnect = false;
+                    setIsConnect(false);
                 }
             }
             try {
@@ -41,19 +62,6 @@ public class ClientMsgSender extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            /**
-            outputs.writeUTF("\nexit confirmed");
-            outputs.flush();
-
-            Cette partie est utilisée pour simuler les trois poignées de main lorsque la connexion TCP est fermée, pour s'assurer que 
-            le flux de données client est fermé plus tôt que la fin du serveur,et l'utilisation de countDownlatch était à l'origine 
-            utilisée pour assurer la progression normale de la poignée de main à trois voies .
-
-            Cependant, des problèmes ont été rencontrés lors du test. La dernière prise de contact lève toujours une IOException côté 
-            serveur, ce qui provoque une déconnexion anormale du serveur. Par conséquent, une solution alternative est utilisée, 
-            qui consiste à laisser le serveur dormir pendant un certain temps pour assurez-vous que le flux de données client est fermé.
-
-             */
         } catch (SocketException socketException) {
             System.out.println("\nOutputStream est sur le point d'être fermé");
         } catch (IOException ioException) {
