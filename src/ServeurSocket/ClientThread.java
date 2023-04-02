@@ -49,7 +49,7 @@ public class ClientThread extends Thread{
         return this.inputs;
     }
 
-    public DataOutputStream getOutouts(){
+    public DataOutputStream getOutputs(){
         return this.outputs;
     }
 
@@ -62,7 +62,7 @@ public class ClientThread extends Thread{
         for(ConcurrentHashMap.Entry<String,ClientThread> entry : ListeClients.entrySet()){
             try{
                 if(entry.getValue().getPseudo().compareTo(this.getPseudo())!=0) {  
-                    entry.getValue().getOutouts().writeUTF(Message);
+                    entry.getValue().getOutputs().writeUTF(Message);
                     entry.getValue().getOutputs().flush();
                 }
             }catch(SocketException socketException){
