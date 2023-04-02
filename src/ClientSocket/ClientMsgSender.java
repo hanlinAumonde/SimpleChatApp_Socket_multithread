@@ -33,7 +33,7 @@ public class ClientMsgSender extends Thread {
         return this.isConnect;
     }
 
-    public DataInputStream getOutputs() {
+    public DataOutputStream getOutputs() {
         return this.outputs;
     }
     
